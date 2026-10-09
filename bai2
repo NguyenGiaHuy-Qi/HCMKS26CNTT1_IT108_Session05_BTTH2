@@ -1,0 +1,88 @@
+# BÀI TẬP: PHÂN TÍCH LỖI VÀ XÂY DỰNG CÂY THƯ MỤC BẰNG WINDOWS POWERSHELL
+
+## PHẦN 1. PHÂN TÍCH LỖI
+
+### 1. Lỗi không đặt đường dẫn có khoảng trắng trong dấu ngoặc kép
+
+Trong PowerShell, nếu đường dẫn chứa khoảng trắng mà không được đặt trong dấu ngoặc kép `"..."`, hệ thống có thể tách đường dẫn thành nhiều đối số riêng biệt.
+
+Ví dụ, lệnh sai:
+
+```powershell
+New-Item -ItemType Directory -Path D:\Shopee Lite
+```
+
+PowerShell có thể hiểu `D:\Shopee` và `Lite` là các đối số khác nhau, dẫn đến lỗi:
+
+```text
+A positional parameter cannot be found that accepts argument 'Lite'.
+```
+
+Cách sửa:
+
+```powershell
+New-Item -ItemType Directory -Path "D:\Shopee Lite"
+```
+
+### 2. Lỗi sao chép thư mục khi đường dẫn nguồn không tồn tại
+
+Nếu Nam sử dụng lệnh sao chép thư mục khi thư mục nguồn chưa được tạo hoặc nhập sai đường dẫn, PowerShell sẽ báo lỗi:
+
+```text
+Cannot find path '...' because it does not exist.
+```
+
+Nguyên nhân là hệ thống không tìm thấy thư mục hoặc tệp tại đường dẫn được chỉ định.
+
+Cách khắc phục là kiểm tra đường dẫn nguồn trước khi sao chép và tạo các thư mục cần thiết theo đúng thứ tự.
+
+### 3. Lỗi sử dụng sai đường dẫn đích khi sao chép
+
+Khi dùng lệnh `Copy-Item`, Nam cần xác định chính xác đường dẫn nguồn và đường dẫn đích. Nếu đường dẫn đích không đúng hoặc thư mục cha chưa tồn tại, thao tác sao chép có thể không thực hiện được như mong muốn.
+
+Ví dụ:
+
+```powershell
+Copy-Item "D:\Shopee-Lite\source-code" "D:\Backup\Shopee-Lite"
+```
+
+Nếu thư mục `D:\Backup` chưa tồn tại, Nam nên tạo thư mục này trước khi sao chép.
+
+### 4. Lỗi không phân biệt giữa tạo thư mục và sao chép thư mục
+
+Hai lệnh `New-Item` và `Copy-Item` có chức năng khác nhau:
+
+- `New-Item`: Tạo tệp hoặc thư mục mới.
+- `Copy-Item`: Sao chép tệp hoặc thư mục đã tồn tại.
+
+Nếu Nam sử dụng `Copy-Item` để tạo một cấu trúc thư mục chưa tồn tại, lệnh có thể báo lỗi vì không tìm thấy nguồn cần sao chép.
+
+Do đó, Nam cần xác định đúng mục đích của từng thao tác trước khi viết lệnh.
+
+## PHẦN 2. HOÀN THIỆN CHUỖI LỆNH POWERSHELL
+
+Giả sử Nam cần tạo cấu trúc thư mục dự án Shopee-Lite gồm bốn thư mục chính: `source-code`, `data`, `documents` và `output`.
+
+Nam có thể thực hiện chính xác bằng 3 dòng lệnh sau:
+
+```powershell
+New-Item -ItemType Directory -Path "D:\Shopee-Lite" -Force
+New-Item -ItemType Directory -Path "D:\Shopee-Lite\source-code","D:\Shopee-Lite\data","D:\Shopee-Lite\documents","D:\Shopee-Lite\output" -Force
+Copy-Item "D:\Shopee-Lite\source-code" "D:\Shopee-Lite\output\source-code-backup" -Recurse -Force
+```
+
+### Giải thích từng dòng lệnh
+
+**Dòng 1:** Tạo thư mục gốc `Shopee-Lite` trên ổ D:. Tham số `-Force` giúp tránh lỗi khi thư mục đã tồn tại.
+
+**Dòng 2:** Tạo đồng thời bốn thư mục con gồm `source-code`, `data`, `documents` và `output`. Các đường dẫn được phân tách bằng dấu phẩy để có thể xử lý trong cùng một lệnh.
+
+**Dòng 3:** Sao chép thư mục `source-code` sang `output\source-code-backup`. Tham số `-Recurse` cho phép sao chép toàn bộ nội dung bên trong thư mục, còn `-Force` hỗ trợ ghi đè các mục phù hợp khi cần.
+
+Lệnh thứ ba giả định thư mục nguồn đã tồn tại sau khi thực hiện hai dòng lệnh đầu tiên. Nếu thư mục nguồn có chứa tệp hoặc thư mục con, chúng sẽ được sao chép cùng với nó.
+
+## KẾT LUẬN
+
+Các lỗi của Nam chủ yếu xuất phát từ việc không xử lý đường dẫn chứa khoảng trắng, không kiểm tra sự tồn tại của thư mục nguồn và nhầm lẫn giữa thao tác tạo thư mục với sao chép thư mục.
+
+Để tránh các lỗi này, Nam cần đặt đường dẫn có khoảng trắng trong dấu ngoặc kép, kiểm tra nguồn và đích trước khi thao tác, đồng thời sử dụng đúng lệnh PowerShell theo mục đích. Việc tổ chức thư mục theo cấu trúc rõ ràng cũng giúp dự án Shopee-Lite dễ quản lý và bảo trì hơn.
